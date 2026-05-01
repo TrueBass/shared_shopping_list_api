@@ -3,6 +3,7 @@ package com.example.shared_shopping_list_api.service;
 import com.example.shared_shopping_list_api.dto.AuthResponse;
 import com.example.shared_shopping_list_api.dto.LoginRequest;
 import com.example.shared_shopping_list_api.dto.SignupRequest;
+import com.example.shared_shopping_list_api.entity.RefreshToken;
 import com.example.shared_shopping_list_api.entity.User;
 import com.example.shared_shopping_list_api.repository.UserRepository;
 import com.example.shared_shopping_list_api.security.JwtService;
@@ -24,6 +25,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
+    private final RefreshTokenService refreshTokenService;
 
     public AuthResponse signup(SignupRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
@@ -38,8 +40,9 @@ public class AuthService {
 
         userRepository.save(user);
 
-        UserDetails userDetails = buildUserDetails(user);
-        return new AuthResponse(jwtService.generateToken(userDetails));
+        String accessToken = jwtService.generateToken(buildUserDetails(user));
+        RefreshToken refreshToken = refreshTokenService.create(user, request.isRememberMe());
+        return new AuthResponse(accessToken, refreshToken.getToken());
     }
 
     public AuthResponse login(LoginRequest request) {
@@ -48,8 +51,20 @@ public class AuthService {
         );
 
         User user = userRepository.findByEmail(request.getEmail()).orElseThrow();
-        UserDetails userDetails = buildUserDetails(user);
-        return new AuthResponse(jwtService.generateToken(userDetails));
+        String accessToken = jwtService.generateToken(buildUserDetails(user));
+        RefreshToken refreshToken = refreshTokenService.create(user, request.isRememberMe());
+        return new AuthResponse(accessToken, refreshToken.getToken());
+    }
+
+    public AuthResponse refresh(String token) {
+        RefreshToken old = refreshTokenService.validate(token);
+        RefreshToken newRefreshToken = refreshTokenService.rotate(old);
+        String accessToken = jwtService.generateToken(buildUserDetails(newRefreshToken.getUser()));
+        return new AuthResponse(accessToken, newRefreshToken.getToken());
+    }
+
+    public void logout(String token) {
+        refreshTokenService.deleteByToken(token);
     }
 
     private UserDetails buildUserDetails(User user) {

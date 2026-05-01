@@ -3,6 +3,7 @@ package com.example.shared_shopping_list_api.controller;
 import com.example.shared_shopping_list_api.dto.AuthResponse;
 import com.example.shared_shopping_list_api.dto.LoginRequest;
 import com.example.shared_shopping_list_api.dto.SignupRequest;
+import com.example.shared_shopping_list_api.dto.TokenRefreshRequest;
 import com.example.shared_shopping_list_api.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -27,5 +28,16 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest request) {
         return ResponseEntity.ok(authService.login(request));
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<AuthResponse> refresh(@RequestBody TokenRefreshRequest request) {
+        return ResponseEntity.ok(authService.refresh(request.getRefreshToken()));
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(@RequestBody TokenRefreshRequest request) {
+        authService.logout(request.getRefreshToken());
+        return ResponseEntity.noContent().build();
     }
 }
