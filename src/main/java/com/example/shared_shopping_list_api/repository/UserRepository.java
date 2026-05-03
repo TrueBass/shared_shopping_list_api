@@ -12,6 +12,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByEmail(String email);
     boolean existsByEmail(String email);
 
-    @Query("SELECT u FROM User u WHERE u.id != :excludeId AND (LOWER(u.name) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(u.email) LIKE LOWER(CONCAT('%', :query, '%')))")
-    List<User> searchUsers(@Param("query") String query, @Param("excludeId") Long excludeId);
+    @Query("SELECT u FROM User u WHERE u.id != :excludeId AND (LOWER(u.name) LIKE :pattern OR LOWER(u.email) LIKE :pattern)")
+    List<User> searchUsers(@Param("pattern") String pattern, @Param("excludeId") Long excludeId);
 }

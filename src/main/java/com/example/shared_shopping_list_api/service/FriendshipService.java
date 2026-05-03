@@ -127,7 +127,8 @@ public class FriendshipService {
     @Transactional(readOnly = true)
     public List<UserSearchResponse> searchUsers(String query, String email) {
         User currentUser = findUserByEmail(email);
-        List<User> users = userRepository.searchUsers(query.trim(), currentUser.getId());
+        String pattern = "%" + query.trim().toLowerCase() + "%";
+        List<User> users = userRepository.searchUsers(pattern, currentUser.getId());
 
         if (users.isEmpty()) {
             return List.of();
