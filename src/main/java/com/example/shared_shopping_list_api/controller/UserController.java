@@ -1,7 +1,9 @@
 package com.example.shared_shopping_list_api.controller;
 
+import com.example.shared_shopping_list_api.dto.ChangePasswordRequest;
 import com.example.shared_shopping_list_api.dto.UserSearchResponse;
 import com.example.shared_shopping_list_api.service.FriendshipService;
+import com.example.shared_shopping_list_api.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -16,6 +18,7 @@ import java.util.List;
 public class UserController {
 
     private final FriendshipService friendshipService;
+    private final UserService userService;
 
     @GetMapping("/me")
     public ResponseEntity<String> me(@AuthenticationPrincipal UserDetails userDetails) {
@@ -27,5 +30,13 @@ public class UserController {
             @RequestParam String q,
             @AuthenticationPrincipal UserDetails userDetails) {
         return ResponseEntity.ok(friendshipService.searchUsers(q, userDetails.getUsername()));
+    }
+
+    @PatchMapping("/password")
+    public ResponseEntity<Void> changePassword(
+            @RequestBody ChangePasswordRequest request,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        userService.changePassword(request, userDetails.getUsername());
+        return ResponseEntity.noContent().build();
     }
 }
