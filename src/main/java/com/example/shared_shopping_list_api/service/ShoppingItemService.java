@@ -5,6 +5,7 @@ import com.example.shared_shopping_list_api.dto.ItemResponse;
 import com.example.shared_shopping_list_api.entity.Group;
 import com.example.shared_shopping_list_api.entity.ShoppingItem;
 import com.example.shared_shopping_list_api.entity.User;
+import com.example.shared_shopping_list_api.exception.ApiException;
 import com.example.shared_shopping_list_api.repository.GroupRepository;
 import com.example.shared_shopping_list_api.repository.ShoppingItemRepository;
 import com.example.shared_shopping_list_api.repository.UserRepository;
@@ -12,7 +13,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -32,7 +32,7 @@ public class ShoppingItemService {
         requireMember(group, user);
 
         if (request.getName() == null || request.getName().isBlank()) {
-            throw new IllegalArgumentException("Item name cannot be empty");
+            throw new ApiException("ITEM_NAME_EMPTY", HttpStatus.BAD_REQUEST, "Item name cannot be empty");
         }
 
         ShoppingItem item = ShoppingItem.builder()
@@ -86,7 +86,7 @@ public class ShoppingItemService {
         ShoppingItem item = findItemInGroup(itemId, groupId);
 
         if (!item.getAddedBy().getId().equals(user.getId())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only the member who added this item can delete it");
+            throw new ApiException("NOT_ITEM_OWNER", HttpStatus.FORBIDDEN, "Only the member who added this item can delete it");
         }
 
         itemRepository.delete(item);
@@ -94,19 +94,19 @@ public class ShoppingItemService {
 
     private User findUserByEmail(String email) {
         return userRepository.findByEmail(email)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED));
+                .orElseThrow(() -> new ApiException("UNAUTHORIZED", HttpStatus.UNAUTHORIZED, "Authentication required"));
     }
 
     private Group findGroupById(Long id) {
         return groupRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Group not found"));
+                .orElseThrow(() -> new ApiException("GROUP_NOT_FOUND", HttpStatus.NOT_FOUND, "Group not found"));
     }
 
     private ShoppingItem findItemInGroup(Long itemId, Long groupId) {
         ShoppingItem item = itemRepository.findById(itemId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Item not found"));
+                .orElseThrow(() -> new ApiException("ITEM_NOT_FOUND", HttpStatus.NOT_FOUND, "Item not found"));
         if (!item.getGroup().getId().equals(groupId)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Item not found");
+            throw new ApiException("ITEM_NOT_FOUND", HttpStatus.NOT_FOUND, "Item not found");
         }
         return item;
     }
@@ -115,7 +115,7 @@ public class ShoppingItemService {
         boolean isMember = group.getMembers().stream()
                 .anyMatch(m -> m.getId().equals(user.getId()));
         if (!isMember) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not a member of this group");
+            throw new ApiException("NOT_GROUP_MEMBER", HttpStatus.FORBIDDEN, "You are not a member of this group");
         }
     }
 }

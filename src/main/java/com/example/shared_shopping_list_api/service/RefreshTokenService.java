@@ -3,8 +3,10 @@ package com.example.shared_shopping_list_api.service;
 import com.example.shared_shopping_list_api.entity.RefreshToken;
 import com.example.shared_shopping_list_api.entity.User;
 import com.example.shared_shopping_list_api.repository.RefreshTokenRepository;
+import com.example.shared_shopping_list_api.exception.ApiException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,11 +40,11 @@ public class RefreshTokenService {
 
     public RefreshToken validate(String token) {
         RefreshToken refreshToken = refreshTokenRepository.findByToken(token)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid refresh token"));
+                .orElseThrow(() -> new ApiException("INVALID_REFRESH_TOKEN", HttpStatus.UNAUTHORIZED, "Refresh token is invalid"));
 
         if (refreshToken.getExpiryDate().isBefore(Instant.now())) {
             refreshTokenRepository.delete(refreshToken);
-            throw new IllegalArgumentException("Refresh token expired");
+            throw new ApiException("REFRESH_TOKEN_EXPIRED", HttpStatus.UNAUTHORIZED, "Refresh token has expired");
         }
 
         return refreshToken;

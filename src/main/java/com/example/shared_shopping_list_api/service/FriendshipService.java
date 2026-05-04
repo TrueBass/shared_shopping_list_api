@@ -6,13 +6,13 @@ import com.example.shared_shopping_list_api.dto.UserSearchResponse;
 import com.example.shared_shopping_list_api.entity.Friendship;
 import com.example.shared_shopping_list_api.entity.Friendship.FriendshipStatus;
 import com.example.shared_shopping_list_api.entity.User;
+import com.example.shared_shopping_list_api.exception.ApiException;
 import com.example.shared_shopping_list_api.repository.FriendshipRepository;
 import com.example.shared_shopping_list_api.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.HashMap;
 import java.util.List;
@@ -30,14 +30,14 @@ public class FriendshipService {
         User requester = findUserByEmail(requesterEmail);
 
         if (requester.getId().equals(addresseeId)) {
-            throw new IllegalArgumentException("Cannot send friend request to yourself");
+            throw new ApiException("CANNOT_FRIEND_SELF", HttpStatus.BAD_REQUEST, "You cannot send a friend request to yourself");
         }
 
         User addressee = userRepository.findById(addresseeId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+                .orElseThrow(() -> new ApiException("USER_NOT_FOUND", HttpStatus.NOT_FOUND, "User not found"));
 
         friendshipRepository.findBetweenUsers(requester, addressee).ifPresent(f -> {
-            throw new IllegalArgumentException("A friendship or pending request already exists with this user");
+            throw new ApiException("FRIENDSHIP_ALREADY_EXISTS", HttpStatus.BAD_REQUEST, "A friendship or pending request already exists with this user");
         });
 
         Friendship friendship = Friendship.builder()
@@ -72,10 +72,10 @@ public class FriendshipService {
         Friendship friendship = findFriendshipById(requestId);
 
         if (!friendship.getAddressee().getId().equals(user.getId())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You cannot accept this request");
+            throw new ApiException("NOT_REQUEST_ADDRESSEE", HttpStatus.FORBIDDEN, "You cannot accept a request that was not sent to you");
         }
         if (friendship.getStatus() != FriendshipStatus.PENDING) {
-            throw new IllegalArgumentException("This request is not pending");
+            throw new ApiException("REQUEST_NOT_PENDING", HttpStatus.BAD_REQUEST, "This friend request is no longer pending");
         }
 
         friendship.setStatus(FriendshipStatus.ACCEPTED);
@@ -91,13 +91,13 @@ public class FriendshipService {
         Friendship friendship = findFriendshipById(requestId);
 
         if (friendship.getStatus() != FriendshipStatus.PENDING) {
-            throw new IllegalArgumentException("This request is not pending");
+            throw new ApiException("REQUEST_NOT_PENDING", HttpStatus.BAD_REQUEST, "This friend request is no longer pending");
         }
 
         boolean isAddressee = friendship.getAddressee().getId().equals(user.getId());
         boolean isRequester = friendship.getRequester().getId().equals(user.getId());
         if (!isAddressee && !isRequester) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You cannot decline this request");
+            throw new ApiException("NOT_REQUEST_PARTICIPANT", HttpStatus.FORBIDDEN, "You are not a participant in this friend request");
         }
 
         friendshipRepository.delete(friendship);
@@ -120,7 +120,7 @@ public class FriendshipService {
     public void removeFriend(Long friendId, String email) {
         User user = findUserByEmail(email);
         Friendship friendship = friendshipRepository.findAcceptedFriendshipBetween(user, friendId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Friendship not found"));
+                .orElseThrow(() -> new ApiException("FRIENDSHIP_NOT_FOUND", HttpStatus.NOT_FOUND, "Friendship not found"));
         friendshipRepository.delete(friendship);
     }
 
@@ -165,12 +165,12 @@ public class FriendshipService {
 
     private User findUserByEmail(String email) {
         return userRepository.findByEmail(email)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED));
+                .orElseThrow(() -> new ApiException("UNAUTHORIZED", HttpStatus.UNAUTHORIZED, "Authentication required"));
     }
 
     private Friendship findFriendshipById(Long id) {
         return friendshipRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Friend request not found"));
+                .orElseThrow(() -> new ApiException("FRIEND_REQUEST_NOT_FOUND", HttpStatus.NOT_FOUND, "Friend request not found"));
     }
 
     private FriendRequestResponse toRequestResponse(Friendship friendship, User otherUser) {

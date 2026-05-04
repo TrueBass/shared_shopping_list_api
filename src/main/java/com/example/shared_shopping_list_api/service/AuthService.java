@@ -7,7 +7,9 @@ import com.example.shared_shopping_list_api.entity.RefreshToken;
 import com.example.shared_shopping_list_api.entity.User;
 import com.example.shared_shopping_list_api.repository.UserRepository;
 import com.example.shared_shopping_list_api.security.JwtService;
+import com.example.shared_shopping_list_api.exception.ApiException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -29,7 +31,7 @@ public class AuthService {
 
     public AuthResponse signup(SignupRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw new IllegalArgumentException("Email already in use");
+            throw new ApiException("EMAIL_ALREADY_EXISTS", HttpStatus.BAD_REQUEST, "Email is already in use");
         }
 
         User user = User.builder()

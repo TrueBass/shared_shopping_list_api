@@ -3,13 +3,13 @@ package com.example.shared_shopping_list_api.service;
 import com.example.shared_shopping_list_api.dto.*;
 import com.example.shared_shopping_list_api.entity.Group;
 import com.example.shared_shopping_list_api.entity.User;
+import com.example.shared_shopping_list_api.exception.ApiException;
 import com.example.shared_shopping_list_api.repository.GroupRepository;
 import com.example.shared_shopping_list_api.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.HashSet;
 import java.util.List;
@@ -33,7 +33,7 @@ public class GroupService {
             for (Long memberId : request.getMemberIds()) {
                 if (!memberId.equals(owner.getId())) {
                     User member = userRepository.findById(memberId)
-                            .orElseThrow(() -> new IllegalArgumentException("User not found: " + memberId));
+                            .orElseThrow(() -> new ApiException("USER_NOT_FOUND", HttpStatus.NOT_FOUND, "User not found: " + memberId));
                     members.add(member);
                 }
             }
@@ -65,7 +65,7 @@ public class GroupService {
         boolean isMember = group.getMembers().stream()
                 .anyMatch(m -> m.getId().equals(user.getId()));
         if (!isMember) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not a member of this group");
+            throw new ApiException("NOT_GROUP_MEMBER", HttpStatus.FORBIDDEN, "You are not a member of this group");
         }
 
         return toResponse(group);
@@ -79,12 +79,12 @@ public class GroupService {
 
         for (Long memberId : request.getMemberIds()) {
             User newMember = userRepository.findById(memberId)
-                    .orElseThrow(() -> new IllegalArgumentException("User not found: " + memberId));
+                    .orElseThrow(() -> new ApiException("USER_NOT_FOUND", HttpStatus.NOT_FOUND, "User not found: " + memberId));
 
             boolean alreadyMember = group.getMembers().stream()
                     .anyMatch(m -> m.getId().equals(newMember.getId()));
             if (alreadyMember) {
-                throw new IllegalArgumentException("User " + memberId + " is already a member");
+                throw new ApiException("ALREADY_GROUP_MEMBER", HttpStatus.BAD_REQUEST, "User " + memberId + " is already a member of this group");
             }
 
             group.getMembers().add(newMember);
@@ -100,16 +100,16 @@ public class GroupService {
         requireOwner(group, currentUser);
 
         if (userId.equals(group.getOwner().getId())) {
-            throw new IllegalArgumentException("Owner cannot be removed from the group");
+            throw new ApiException("CANNOT_REMOVE_OWNER", HttpStatus.BAD_REQUEST, "The group owner cannot be removed");
         }
 
         User memberToRemove = userRepository.findById(userId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+                .orElseThrow(() -> new ApiException("USER_NOT_FOUND", HttpStatus.NOT_FOUND, "User not found"));
 
         boolean isMember = group.getMembers().stream()
                 .anyMatch(m -> m.getId().equals(memberToRemove.getId()));
         if (!isMember) {
-            throw new IllegalArgumentException("User is not a member of this group");
+            throw new ApiException("NOT_GROUP_MEMBER", HttpStatus.BAD_REQUEST, "User is not a member of this group");
         }
 
         group.getMembers().removeIf(m -> m.getId().equals(memberToRemove.getId()));
@@ -126,17 +126,17 @@ public class GroupService {
 
     private User findUserByEmail(String email) {
         return userRepository.findByEmail(email)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED));
+                .orElseThrow(() -> new ApiException("UNAUTHORIZED", HttpStatus.UNAUTHORIZED, "Authentication required"));
     }
 
     private Group findGroupById(Long id) {
         return groupRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Group not found"));
+                .orElseThrow(() -> new ApiException("GROUP_NOT_FOUND", HttpStatus.NOT_FOUND, "Group not found"));
     }
 
     private void requireOwner(Group group, User user) {
         if (!group.getOwner().getId().equals(user.getId())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only the owner can perform this action");
+            throw new ApiException("NOT_GROUP_OWNER", HttpStatus.FORBIDDEN, "Only the group owner can perform this action");
         }
     }
 
