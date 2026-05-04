@@ -70,6 +70,9 @@ public class ShoppingItemService {
             item.setCheckedBy(user);
             item.setCheckedAt(LocalDateTime.now());
         } else {
+            if (!item.getCheckedBy().getId().equals(user.getId())) {
+                throw new ApiException("NOT_ITEM_CHECKER", HttpStatus.FORBIDDEN, "Only the user who checked this item can uncheck it");
+            }
             item.setCheckedBy(null);
             item.setCheckedAt(null);
         }

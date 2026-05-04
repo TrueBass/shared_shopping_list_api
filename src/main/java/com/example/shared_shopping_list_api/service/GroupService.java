@@ -5,6 +5,7 @@ import com.example.shared_shopping_list_api.entity.Group;
 import com.example.shared_shopping_list_api.entity.User;
 import com.example.shared_shopping_list_api.exception.ApiException;
 import com.example.shared_shopping_list_api.repository.GroupRepository;
+import com.example.shared_shopping_list_api.repository.ShoppingItemRepository;
 import com.example.shared_shopping_list_api.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -21,6 +22,7 @@ public class GroupService {
 
     private final GroupRepository groupRepository;
     private final UserRepository userRepository;
+    private final ShoppingItemRepository itemRepository;
 
     @Transactional
     public GroupResponse createGroup(CreateGroupRequest request, String email) {
@@ -112,6 +114,7 @@ public class GroupService {
             throw new ApiException("NOT_GROUP_MEMBER", HttpStatus.BAD_REQUEST, "User is not a member of this group");
         }
 
+        itemRepository.deleteUncheckedItemsByGroupAndUser(group, memberToRemove);
         group.getMembers().removeIf(m -> m.getId().equals(memberToRemove.getId()));
         groupRepository.save(group);
     }
