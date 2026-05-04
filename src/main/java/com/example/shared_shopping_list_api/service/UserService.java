@@ -1,5 +1,6 @@
 package com.example.shared_shopping_list_api.service;
 
+import com.example.shared_shopping_list_api.dto.ChangeNameRequest;
 import com.example.shared_shopping_list_api.dto.ChangePasswordRequest;
 import com.example.shared_shopping_list_api.entity.User;
 import com.example.shared_shopping_list_api.exception.ApiException;
@@ -16,6 +17,19 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+
+    @Transactional
+    public void changeName(ChangeNameRequest request, String email) {
+        if (request.getName() == null || request.getName().isBlank()) {
+            throw new ApiException("NAME_EMPTY", HttpStatus.BAD_REQUEST, "Name cannot be empty");
+        }
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ApiException("UNAUTHORIZED", HttpStatus.UNAUTHORIZED, "Authentication required"));
+
+        user.setName(request.getName().trim());
+        userRepository.save(user);
+    }
 
     @Transactional
     public void changePassword(ChangePasswordRequest request, String email) {

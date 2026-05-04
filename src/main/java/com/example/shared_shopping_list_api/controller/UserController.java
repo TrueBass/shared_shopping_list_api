@@ -1,5 +1,6 @@
 package com.example.shared_shopping_list_api.controller;
 
+import com.example.shared_shopping_list_api.dto.ChangeNameRequest;
 import com.example.shared_shopping_list_api.dto.ChangePasswordRequest;
 import com.example.shared_shopping_list_api.dto.UserSearchResponse;
 import com.example.shared_shopping_list_api.service.FriendshipService;
@@ -30,6 +31,14 @@ public class UserController {
             @RequestParam String q,
             @AuthenticationPrincipal UserDetails userDetails) {
         return ResponseEntity.ok(friendshipService.searchUsers(q, userDetails.getUsername()));
+    }
+
+    @PatchMapping("/name")
+    public ResponseEntity<Void> changeName(
+            @RequestBody ChangeNameRequest request,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        userService.changeName(request, userDetails.getUsername());
+        return ResponseEntity.noContent().build();
     }
 
     @PatchMapping("/password")
