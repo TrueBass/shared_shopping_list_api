@@ -1,6 +1,8 @@
 package com.example.shared_shopping_list_api.service;
 
 import com.example.shared_shopping_list_api.dto.CreateItemRequest;
+import com.example.shared_shopping_list_api.dto.ItemEvent;
+import com.example.shared_shopping_list_api.dto.ItemEvent.EventType;
 import com.example.shared_shopping_list_api.dto.ItemResponse;
 import com.example.shared_shopping_list_api.entity.Group;
 import com.example.shared_shopping_list_api.entity.ShoppingItem;
@@ -11,6 +13,7 @@ import com.example.shared_shopping_list_api.repository.ShoppingItemRepository;
 import com.example.shared_shopping_list_api.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,6 +27,7 @@ public class ShoppingItemService {
     private final ShoppingItemRepository itemRepository;
     private final GroupRepository groupRepository;
     private final UserRepository userRepository;
+    private final SimpMessagingTemplate messagingTemplate;
 
     @Transactional
     public ItemResponse addItem(Long groupId, CreateItemRequest request, String email) {
@@ -44,7 +48,9 @@ public class ShoppingItemService {
                 .addedBy(user)
                 .build();
 
-        return ItemResponse.from(itemRepository.save(item));
+        ItemResponse response = ItemResponse.from(itemRepository.save(item));
+        publish(groupId, new ItemEvent(EventType.ITEM_CREATED, response, null));
+        return response;
     }
 
     @Transactional(readOnly = true)
@@ -77,7 +83,9 @@ public class ShoppingItemService {
             item.setCheckedAt(null);
         }
 
-        return ItemResponse.from(itemRepository.save(item));
+        ItemResponse response = ItemResponse.from(itemRepository.save(item));
+        publish(groupId, new ItemEvent(EventType.ITEM_UPDATED, response, null));
+        return response;
     }
 
     @Transactional
@@ -93,6 +101,11 @@ public class ShoppingItemService {
         }
 
         itemRepository.delete(item);
+        publish(groupId, new ItemEvent(EventType.ITEM_DELETED, null, itemId));
+    }
+
+    private void publish(Long groupId, ItemEvent event) {
+        messagingTemplate.convertAndSend("/topic/groups/" + groupId, event);
     }
 
     private User findUserByEmail(String email) {
