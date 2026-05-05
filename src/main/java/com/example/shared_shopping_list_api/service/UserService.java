@@ -27,7 +27,12 @@ public class UserService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ApiException("UNAUTHORIZED", HttpStatus.UNAUTHORIZED, "Authentication required"));
 
-        user.setName(request.getName().trim());
+        String newName = request.getName().trim();
+        if (userRepository.existsByNameAndIdNot(newName, user.getId())) {
+            throw new ApiException("USERNAME_ALREADY_EXISTS", HttpStatus.BAD_REQUEST, "Username is already taken");
+        }
+
+        user.setName(newName);
         userRepository.save(user);
     }
 

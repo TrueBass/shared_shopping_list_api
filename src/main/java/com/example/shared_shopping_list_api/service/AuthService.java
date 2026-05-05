@@ -34,6 +34,10 @@ public class AuthService {
             throw new ApiException("EMAIL_ALREADY_EXISTS", HttpStatus.BAD_REQUEST, "Email is already in use");
         }
 
+        if (userRepository.existsByName(request.getName())) {
+            throw new ApiException("USERNAME_ALREADY_EXISTS", HttpStatus.BAD_REQUEST, "Username is already taken");
+        }
+
         User user = User.builder()
                 .name(request.getName())
                 .email(request.getEmail())

@@ -11,6 +11,8 @@ import java.util.Optional;
 public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByEmail(String email);
     boolean existsByEmail(String email);
+    boolean existsByName(String name);
+    boolean existsByNameAndIdNot(String name, Long id);
 
     @Query("SELECT u FROM User u WHERE u.id != :excludeId AND (LOWER(u.name) LIKE :pattern OR LOWER(u.email) LIKE :pattern)")
     List<User> searchUsers(@Param("pattern") String pattern, @Param("excludeId") Long excludeId);
