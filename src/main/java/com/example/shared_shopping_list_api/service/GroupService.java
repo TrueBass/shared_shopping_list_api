@@ -120,6 +120,26 @@ public class GroupService {
     }
 
     @Transactional
+    public void leaveGroup(Long id, String email) {
+        User user = findUserByEmail(email);
+        Group group = findGroupById(id);
+
+        boolean isMember = group.getMembers().stream()
+                .anyMatch(m -> m.getId().equals(user.getId()));
+        if (!isMember) {
+            throw new ApiException("NOT_GROUP_MEMBER", HttpStatus.FORBIDDEN, "You are not a member of this group");
+        }
+
+        if (group.getOwner().getId().equals(user.getId())) {
+            throw new ApiException("OWNER_CANNOT_LEAVE", HttpStatus.BAD_REQUEST, "Group owner cannot leave — delete the group instead");
+        }
+
+        itemRepository.deleteUncheckedItemsByGroupAndUser(group, user);
+        group.getMembers().removeIf(m -> m.getId().equals(user.getId()));
+        groupRepository.save(group);
+    }
+
+    @Transactional
     public void deleteGroup(Long id, String email) {
         User currentUser = findUserByEmail(email);
         Group group = findGroupById(id);
