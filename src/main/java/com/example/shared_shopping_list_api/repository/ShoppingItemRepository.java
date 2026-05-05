@@ -15,4 +15,8 @@ public interface ShoppingItemRepository extends JpaRepository<ShoppingItem, Long
     @Modifying
     @Query("DELETE FROM ShoppingItem i WHERE i.group = :group AND i.addedBy = :user AND i.checkedBy IS NULL")
     void deleteUncheckedItemsByGroupAndUser(Group group, User user);
+
+    @Modifying
+    @Query("DELETE FROM ShoppingItem i WHERE i.group = :group")
+    void deleteAllByGroup(Group group);
 }

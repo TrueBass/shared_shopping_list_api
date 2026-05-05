@@ -124,6 +124,7 @@ public class GroupService {
         User currentUser = findUserByEmail(email);
         Group group = findGroupById(id);
         requireOwner(group, currentUser);
+        itemRepository.deleteAllByGroup(group);
         groupRepository.delete(group);
     }
 
