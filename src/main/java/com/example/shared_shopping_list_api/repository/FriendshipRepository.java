@@ -3,6 +3,7 @@ package com.example.shared_shopping_list_api.repository;
 import com.example.shared_shopping_list_api.entity.Friendship;
 import com.example.shared_shopping_list_api.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -28,4 +29,8 @@ public interface FriendshipRepository extends JpaRepository<Friendship, Long> {
 
     @Query("SELECT f FROM Friendship f WHERE ((f.requester = :user AND f.addressee.id = :friendId) OR (f.addressee = :user AND f.requester.id = :friendId)) AND f.status = 'ACCEPTED'")
     Optional<Friendship> findAcceptedFriendshipBetween(@Param("user") User user, @Param("friendId") Long friendId);
+
+    @Modifying
+    @Query("DELETE FROM Friendship f WHERE f.requester = :user OR f.addressee = :user")
+    void deleteAllByUser(@Param("user") User user);
 }
