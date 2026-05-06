@@ -74,8 +74,8 @@ public class UserService {
         // Nullify checkedBy across all groups so checked items become unchecked again
         itemRepository.nullifyCheckedBy(user);
 
-        // Delete all items the user added — covers both owned and non-owned groups
-        itemRepository.deleteAllByAddedBy(user);
+        // Nullify addedBy across all groups so items stay visible to remaining members
+        itemRepository.nullifyAddedBy(user);
 
         // Handle groups
         List<Group> allGroups = groupRepository.findByMembersContaining(user);

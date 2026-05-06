@@ -26,8 +26,8 @@ public interface ShoppingItemRepository extends JpaRepository<ShoppingItem, Long
     void nullifyCheckedBy(@Param("user") User user);
 
     @Modifying
-    @Query("DELETE FROM ShoppingItem i WHERE i.addedBy = :user")
-    void deleteAllByAddedBy(@Param("user") User user);
+    @Query("UPDATE ShoppingItem i SET i.addedBy = null WHERE i.addedBy = :user")
+    void nullifyAddedBy(@Param("user") User user);
 
     @Modifying
     @Query("UPDATE ShoppingItem i SET i.addedBy = null WHERE i.addedBy = :user AND i.group = :group")
