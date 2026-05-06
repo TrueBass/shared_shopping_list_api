@@ -114,7 +114,7 @@ public class GroupService {
             throw new ApiException("NOT_GROUP_MEMBER", HttpStatus.BAD_REQUEST, "User is not a member of this group");
         }
 
-        itemRepository.deleteUncheckedItemsByGroupAndUser(group, memberToRemove);
+        itemRepository.nullifyAddedByInGroup(memberToRemove, group);
         group.getMembers().removeIf(m -> m.getId().equals(memberToRemove.getId()));
         groupRepository.save(group);
     }
