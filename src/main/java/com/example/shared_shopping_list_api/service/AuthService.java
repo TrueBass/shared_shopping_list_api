@@ -30,12 +30,12 @@ public class AuthService {
     private final RefreshTokenService refreshTokenService;
 
     public AuthResponse signup(SignupRequest request) {
-        if (userRepository.existsByEmail(request.getEmail())) {
-            throw new ApiException("EMAIL_ALREADY_EXISTS", HttpStatus.BAD_REQUEST, "Email is already in use");
-        }
-
         if (userRepository.existsByName(request.getName())) {
             throw new ApiException("USERNAME_ALREADY_EXISTS", HttpStatus.BAD_REQUEST, "Username is already taken");
+        }
+
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new ApiException("EMAIL_ALREADY_EXISTS", HttpStatus.BAD_REQUEST, "Email is already in use");
         }
 
         User user = User.builder()
