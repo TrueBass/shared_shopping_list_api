@@ -33,8 +33,8 @@ public class ShoppingItem {
     @JoinColumn(name = "group_id", nullable = false)
     private Group group;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "added_by_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "added_by_id")
     private User addedBy;
 
     @ManyToOne(fetch = FetchType.LAZY)

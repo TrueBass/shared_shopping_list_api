@@ -28,7 +28,7 @@ public class ItemResponse {
                 item.getQuantity(),
                 item.getUnit(),
                 item.getCategory(),
-                GroupMemberResponse.from(item.getAddedBy()),
+                item.getAddedBy() != null ? GroupMemberResponse.from(item.getAddedBy()) : null,
                 item.getCheckedBy() != null ? GroupMemberResponse.from(item.getCheckedBy()) : null,
                 item.getCheckedAt(),
                 item.getCreatedAt()

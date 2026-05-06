@@ -134,7 +134,7 @@ public class GroupService {
             throw new ApiException("OWNER_CANNOT_LEAVE", HttpStatus.BAD_REQUEST, "Group owner cannot leave — delete the group instead");
         }
 
-        itemRepository.deleteUncheckedItemsByGroupAndUser(group, user);
+        itemRepository.nullifyAddedByInGroup(user, group);
         group.getMembers().removeIf(m -> m.getId().equals(user.getId()));
         groupRepository.save(group);
     }

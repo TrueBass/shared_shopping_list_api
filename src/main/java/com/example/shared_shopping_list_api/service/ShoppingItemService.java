@@ -96,7 +96,11 @@ public class ShoppingItemService {
 
         ShoppingItem item = findItemInGroup(itemId, groupId);
 
-        if (!item.getAddedBy().getId().equals(user.getId())) {
+        if (item.getAddedBy() == null) {
+            if (!group.getOwner().getId().equals(user.getId())) {
+                throw new ApiException("NOT_GROUP_OWNER", HttpStatus.FORBIDDEN, "Only the group owner can delete items from members who left");
+            }
+        } else if (!item.getAddedBy().getId().equals(user.getId())) {
             throw new ApiException("NOT_ITEM_OWNER", HttpStatus.FORBIDDEN, "Only the member who added this item can delete it");
         }
 
