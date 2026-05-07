@@ -5,6 +5,7 @@ import com.example.shared_shopping_list_api.dto.LoginRequest;
 import com.example.shared_shopping_list_api.dto.SignupRequest;
 import com.example.shared_shopping_list_api.dto.TokenRefreshRequest;
 import com.example.shared_shopping_list_api.service.AuthService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,7 +22,7 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/signup")
-    public ResponseEntity<AuthResponse> signup(@RequestBody SignupRequest request) {
+    public ResponseEntity<AuthResponse> signup(@Valid @RequestBody SignupRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(authService.signup(request));
     }
 
