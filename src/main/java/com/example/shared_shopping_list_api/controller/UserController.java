@@ -5,6 +5,7 @@ import com.example.shared_shopping_list_api.dto.ChangePasswordRequest;
 import com.example.shared_shopping_list_api.dto.UserSearchResponse;
 import com.example.shared_shopping_list_api.service.FriendshipService;
 import com.example.shared_shopping_list_api.service.UserService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -35,7 +36,7 @@ public class UserController {
 
     @PatchMapping("/name")
     public ResponseEntity<Void> changeName(
-            @RequestBody ChangeNameRequest request,
+            @Valid @RequestBody ChangeNameRequest request,
             @AuthenticationPrincipal UserDetails userDetails) {
         userService.changeName(request, userDetails.getUsername());
         return ResponseEntity.noContent().build();

@@ -104,7 +104,7 @@ public class FriendshipService {
     }
 
     @Transactional(readOnly = true)
-    public List<FriendResponse> getFriends(String email) {
+    public List<FriendResponse> getFriends(String email, String query) {
         User user = findUserByEmail(email);
         return friendshipRepository.findAcceptedFriendships(user).stream()
                 .map(f -> {
@@ -113,7 +113,33 @@ public class FriendshipService {
                             : f.getRequester();
                     return new FriendResponse(f.getId(), friend.getId(), friend.getName(), friend.getEmail(), f.getCreatedAt());
                 })
+                .filter(f -> query == null || f.getName().toLowerCase().contains(query.toLowerCase()))
                 .toList();
+    }
+
+    @Transactional
+    public FriendRequestResponse sendFriendRequestByUsername(String username, String requesterEmail) {
+        User requester = findUserByEmail(requesterEmail);
+
+        User addressee = userRepository.findByName(username)
+                .orElseThrow(() -> new ApiException("USER_NOT_FOUND", HttpStatus.NOT_FOUND, "No user found with username \"" + username + "\""));
+
+        if (requester.getId().equals(addressee.getId())) {
+            throw new ApiException("CANNOT_FRIEND_SELF", HttpStatus.BAD_REQUEST, "You cannot send a friend request to yourself");
+        }
+
+        friendshipRepository.findBetweenUsers(requester, addressee).ifPresent(f -> {
+            throw new ApiException("FRIENDSHIP_ALREADY_EXISTS", HttpStatus.BAD_REQUEST, "A friendship or pending request already exists with this user");
+        });
+
+        Friendship friendship = Friendship.builder()
+                .requester(requester)
+                .addressee(addressee)
+                .status(FriendshipStatus.PENDING)
+                .build();
+
+        friendship = friendshipRepository.save(friendship);
+        return toRequestResponse(friendship, addressee);
     }
 
     @Transactional

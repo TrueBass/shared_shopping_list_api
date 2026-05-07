@@ -54,10 +54,19 @@ public class FriendshipController {
         return ResponseEntity.noContent().build();
     }
 
+    @PostMapping("/requests/by-username")
+    public ResponseEntity<FriendRequestResponse> sendFriendRequestByUsername(
+            @RequestParam String username,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(friendshipService.sendFriendRequestByUsername(username, userDetails.getUsername()));
+    }
+
     @GetMapping
     public ResponseEntity<List<FriendResponse>> getFriends(
+            @RequestParam(required = false) String q,
             @AuthenticationPrincipal UserDetails userDetails) {
-        return ResponseEntity.ok(friendshipService.getFriends(userDetails.getUsername()));
+        return ResponseEntity.ok(friendshipService.getFriends(userDetails.getUsername(), q));
     }
 
     @DeleteMapping("/{friendId}")
