@@ -3,6 +3,7 @@ package com.example.shared_shopping_list_api.service;
 import com.example.shared_shopping_list_api.dto.AuthResponse;
 import com.example.shared_shopping_list_api.dto.LoginRequest;
 import com.example.shared_shopping_list_api.dto.SignupRequest;
+import com.example.shared_shopping_list_api.dto.UserResponse;
 import com.example.shared_shopping_list_api.entity.RefreshToken;
 import com.example.shared_shopping_list_api.entity.User;
 import com.example.shared_shopping_list_api.repository.UserRepository;
@@ -48,7 +49,7 @@ public class AuthService {
 
         String accessToken = jwtService.generateToken(buildUserDetails(user));
         RefreshToken refreshToken = refreshTokenService.create(user, request.isRememberMe());
-        return new AuthResponse(accessToken, refreshToken.getToken());
+        return new AuthResponse(accessToken, refreshToken.getToken(), toUserResponse(user));
     }
 
     public AuthResponse login(LoginRequest request) {
@@ -59,18 +60,23 @@ public class AuthService {
         User user = userRepository.findByEmail(request.getEmail()).orElseThrow();
         String accessToken = jwtService.generateToken(buildUserDetails(user));
         RefreshToken refreshToken = refreshTokenService.create(user, request.isRememberMe());
-        return new AuthResponse(accessToken, refreshToken.getToken());
+        return new AuthResponse(accessToken, refreshToken.getToken(), toUserResponse(user));
     }
 
     public AuthResponse refresh(String token) {
         RefreshToken old = refreshTokenService.validate(token);
         RefreshToken newRefreshToken = refreshTokenService.rotate(old);
-        String accessToken = jwtService.generateToken(buildUserDetails(newRefreshToken.getUser()));
-        return new AuthResponse(accessToken, newRefreshToken.getToken());
+        User user = newRefreshToken.getUser();
+        String accessToken = jwtService.generateToken(buildUserDetails(user));
+        return new AuthResponse(accessToken, newRefreshToken.getToken(), toUserResponse(user));
     }
 
     public void logout(String token) {
         refreshTokenService.deleteByToken(token);
+    }
+
+    private UserResponse toUserResponse(User user) {
+        return new UserResponse(user.getEmail(), user.getName());
     }
 
     private UserDetails buildUserDetails(User user) {

@@ -2,6 +2,7 @@ package com.example.shared_shopping_list_api.controller;
 
 import com.example.shared_shopping_list_api.dto.ChangeNameRequest;
 import com.example.shared_shopping_list_api.dto.ChangePasswordRequest;
+import com.example.shared_shopping_list_api.dto.UserResponse;
 import com.example.shared_shopping_list_api.dto.UserSearchResponse;
 import com.example.shared_shopping_list_api.service.FriendshipService;
 import com.example.shared_shopping_list_api.service.UserService;
@@ -23,8 +24,8 @@ public class UserController {
     private final UserService userService;
 
     @GetMapping("/me")
-    public ResponseEntity<String> me(@AuthenticationPrincipal UserDetails userDetails) {
-        return ResponseEntity.ok(userDetails.getUsername());
+    public ResponseEntity<UserResponse> me(@AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.ok(userService.getCurrentUser(userDetails.getUsername()));
     }
 
     @GetMapping("/search")

@@ -2,6 +2,7 @@ package com.example.shared_shopping_list_api.service;
 
 import com.example.shared_shopping_list_api.dto.ChangeNameRequest;
 import com.example.shared_shopping_list_api.dto.ChangePasswordRequest;
+import com.example.shared_shopping_list_api.dto.UserResponse;
 import com.example.shared_shopping_list_api.entity.Group;
 import com.example.shared_shopping_list_api.entity.User;
 import com.example.shared_shopping_list_api.exception.ApiException;
@@ -30,6 +31,13 @@ public class UserService {
     private final FriendshipRepository friendshipRepository;
     private final GroupRepository groupRepository;
     private final ShoppingItemRepository itemRepository;
+
+    @Transactional(readOnly = true)
+    public UserResponse getCurrentUser(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ApiException("UNAUTHORIZED", HttpStatus.UNAUTHORIZED, "Authentication required"));
+        return new UserResponse(user.getEmail(), user.getName());
+    }
 
     @Transactional
     public void changeName(ChangeNameRequest request, String email) {
